@@ -1,67 +1,106 @@
+import type {Value} from 'vfile'
+import type {CompileResults} from './lib/index.js'
+
+export type {
+  // `CompileResultMap` is typed and exposed below.
+  CompileResults,
+  Compiler,
+  // `Data` is typed and exposed below.
+  Parser,
+  Pluggable,
+  PluggableList,
+  Plugin,
+  PluginTuple,
+  Preset,
+  ProcessCallback,
+  Processor,
+  RunCallback,
+  // `Settings` is typed and exposed below.
+  TransformCallback,
+  Transformer
+} from './lib/index.js'
+
+export {unified} from './lib/index.js'
+
+// See: <https://github.com/sindresorhus/type-fest/blob/main/source/empty-object.d.ts>
+declare const emptyObjectSymbol: unique symbol
+
 /**
- * Handle values based on a field.
+ * Interface of known results from compilers.
  *
- * @template {InvalidHandler} [Invalid=InvalidHandler]
- * @template {UnknownHandler} [Unknown=UnknownHandler]
- * @template {Record<string, Handler>} [Handlers=Record<string, Handler>]
- * @param {string} key
- *   Field to switch on.
- * @param {Options<Invalid, Unknown, Handlers>} [options]
- *   Configuration (required).
- * @returns {{unknown: Unknown, invalid: Invalid, handlers: Handlers, (...parameters: Parameters<Handlers[keyof Handlers]>): ReturnType<Handlers[keyof Handlers]>, (...parameters: Parameters<Unknown>): ReturnType<Unknown>}}
+ * Normally, compilers result in text ({@linkcode Value} of `vfile`).
+ * When you compile to something else, such as a React node (as in,
+ * `rehype-react`), you can augment this interface to include that type.
+ *
+ * ```ts
+ * import type {ReactNode} from 'somewhere'
+ *
+ * declare module 'unified' {
+ *   interface CompileResultMap {
+ *     // Register a new result (value is used, key should match it).
+ *     ReactNode: ReactNode
+ *   }
+ * }
+ *
+ * export {} // You may not need this, but it makes sure the file is a module.
+ * ```
+ *
+ * Use {@linkcode CompileResults} to access the values.
  */
-export function zwitch<
-  Invalid extends InvalidHandler = InvalidHandler,
-  Unknown extends UnknownHandler = UnknownHandler,
-  Handlers extends Record<string, Handler> = Record<string, Handler>
->(
-  key: string,
-  options?: Options<Invalid, Unknown, Handlers> | undefined
-): {
-  (...parameters: Parameters<Handlers[keyof Handlers]>): ReturnType<
-    Handlers[keyof Handlers]
-  >
-  (...parameters: Parameters<Unknown>): ReturnType<Unknown>
-  unknown: Unknown
-  invalid: Invalid
-  handlers: Handlers
+export interface CompileResultMap {
+  // Note: if `Value` from `VFile` is changed, this should too.
+  Uint8Array: Uint8Array
+  string: string
 }
+
 /**
- * Handle a value, with a certain ID field set to a certain value.
- * The ID field is passed to `zwitch`, and it’s value is this function’s
- * place on the `handlers` record.
+ * Interface of known data that can be supported by all plugins.
+ *
+ * Typically, options can be given to a specific plugin, but sometimes it makes
+ * sense to have information shared with several plugins.
+ * For example, a list of HTML elements that are self-closing, which is needed
+ * during all phases.
+ *
+ * To type this, do something like:
+ *
+ * ```ts
+ * declare module 'unified' {
+ *   interface Data {
+ *     htmlVoidElements?: Array<string> | undefined
+ *   }
+ * }
+ *
+ * export {} // You may not need this, but it makes sure the file is a module.
+ * ```
  */
-export type Handler = (...parameters: any[]) => any
+export interface Data {
+  settings?: Settings | undefined
+}
+
 /**
- * Handle values that do have a certain ID field, but it’s set to a value
- * that is not listed in the `handlers` record.
+ * Interface of known extra options, that can be supported by parser and
+ * compilers.
+ *
+ * This exists so that users can use packages such as `remark`, which configure
+ * both parsers and compilers (in this case `remark-parse` and
+ * `remark-stringify`), and still provide options for them.
+ *
+ * When you make parsers or compilers, that could be packaged up together,
+ * you should support `this.data('settings')` as input and merge it with
+ * explicitly passed `options`.
+ * Then, to type it, using `remark-stringify` as an example, do something like:
+ *
+ * ```ts
+ * declare module 'unified' {
+ *   interface Settings {
+ *     bullet: '*' | '+' | '-'
+ *     // …
+ *   }
+ * }
+ *
+ * export {} // You may not need this, but it makes sure the file is a module.
+ * ```
  */
-export type UnknownHandler = (value: unknown, ...rest: any[]) => any
-/**
- * Handle values that do not have a certain ID field.
- */
-export type InvalidHandler = (
-  value: unknown,
-  ...rest: any[]
-) => void | null | undefined | never
-/**
- * Configuration (required).
- */
-export type Options<
-  Invalid extends InvalidHandler = InvalidHandler,
-  Unknown extends UnknownHandler = UnknownHandler,
-  Handlers extends Record<string, Handler> = Record<string, Handler>
-> = {
-  /**
-   * Handler to use for invalid values.
-   */
-  invalid?: Invalid | undefined
-  /**
-   * Handler to use for unknown values.
-   */
-  unknown?: Unknown | undefined
-  /**
-   * Handlers to use.
-   */
-  handlers?: Handlers | undefined
+export interface Settings {
+  [emptyObjectSymbol]?: never
 }
