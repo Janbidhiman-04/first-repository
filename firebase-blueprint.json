@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account and profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "selectedLevel": { "type": "string", "enum": ["L1", "L2", "L3", "L4", "L5", "L6", "L7"] },
+        "totalPoints": { "type": "integer" },
+        "isPremium": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "selectedLevel"]
+    },
+    "ContentItem": {
+      "title": "Content Item",
+      "description": "Educational content like videos, quizzes, or games",
+      "type": "object",
+      "properties": {
+        "levelId": { "type": "string" },
+        "subject": { "type": "string" },
+        "topic": { "type": "string" },
+        "title": { "type": "string" },
+        "contentType": { "type": "string", "enum": ["video", "text", "quiz", "game"] },
+        "pointsReward": { "type": "integer" },
+        "isPremium": { "type": "boolean" }
+      },
+      "required": ["levelId", "subject", "topic", "title", "contentType"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles"
+    },
+    "/content_items/{contentId}": {
+      "schema": "ContentItem",
+      "description": "Collection of educational content"
+    }
+  }
+}

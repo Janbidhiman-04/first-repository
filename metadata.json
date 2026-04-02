@@ -1,0 +1,9 @@
+{
+  "name": "Eduana",
+  "description": "A gamified, AI-driven learning ecosystem for students from Playschool to Competitive Exam levels.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
